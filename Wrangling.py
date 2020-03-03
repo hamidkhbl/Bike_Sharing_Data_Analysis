@@ -3,6 +3,7 @@ import numpy as np
 import requests
 import os
 import zipfile
+import shutil
 
 ########################## START: Data Gathering ###############################
 
@@ -62,8 +63,85 @@ def mergeAllFiles():
     for f in fileNames:
             os.remove(f)
             os.remove(f[:len(f)-4])
+    shutil.rmtree('__MACOSX')
+    shutil.rmtree('__pycache__')
 
 ########################## END: Data Gathering ###############################
+
+########################## START: DATA ASSESSMENT ############################
+
+# Data issues that needs to be fixed 
+# Quality issues:
+# 1. Station id type id float.
+# 2. There are some locations with latitude and longitude equal to zero.
+# 3. Station name and station id columns have many NaN values (less tha 4% of the data).
+# 4. 95% values for rental_access_method is NaN
+
+# Tidyness issues:
+# 1. Data of stations and trips are stored in the same table.
+
+########################## END: DATA ASSESSMENT ##############################
+
+########################## START: DATA CLEANING ##############################
+
+def clean():
+    # Read the data
+    df = pd.read_csv('All.csv', index_col=0, low_memory=False)
+
+    # 1. Define: Remove all the trips without a station Id
+    # code
+    df = df[(~df['start_station_id'].isna()) & (~df['end_station_id'].isna())]
+
+    # test
+    #df[(df['start_station_id'].isna())].shape
+    #df[(df['end_station_id'].isna())].shape
+
+    # 2. Remove rental_access_method column (as 96% of the column is null and we won't use it we can remove it)
+    # code
+    df.drop('rental_access_method', inplace=True, axis=1)
+    #Test 
+    #df.info()
+
+    # 3. Remove all the locations with latitude and longitude equal of zero. (When bikes have error on reporting the location they retuen zero)
+    # code
+    df = df[(df['start_station_latitude'] != 0) & (df['start_station_longitude'] != 0) & (df['end_station_latitude'] != 0) & (df['end_station_longitude'] != 0)]
+
+    # test
+    #df[(df['start_station_latitude'] == 0) | (df['start_station_longitude'] == 0) | (df['end_station_latitude'] == 0) | (df['end_station_longitude'] == 0)].shape[0]
+
+    # 4. Conver Station_id to int
+    # Code
+    df['start_station_id'] = df['start_station_id'].astype(int)
+    df['end_station_id'] = df['end_station_id'].astype(int)
+
+    # test
+    #df.info()
+
+    # 5. Devide the stations and trips data
+
+    # Code: Seperate station data
+    start_stations = df.groupby(['start_station_id','start_station_latitude','start_station_longitude','start_station_name' ]).size().reset_index()
+    end_stations = df.groupby(['end_station_id','end_station_latitude','end_station_longitude','end_station_name']).size().reset_index()
+
+    start_stations.drop(0, axis=1, inplace = True)
+    start_stations.columns = ['station_id','latitude','longitude','name']
+    end_stations.drop(0, axis=1, inplace = True)
+    end_stations.columns = ['station_id','latitude','longitude','name']
+
+    stations = start_stations.append(end_stations)
+    stations.drop_duplicates(['station_id','latitude','longitude'], keep='first', inplace=True)
+
+    stations.to_csv('stations.csv')
+
+    # Remove station details from trip data
+    df = df[['duration_sec', 'start_time', 'end_time', 'start_station_id','end_station_id', 'bike_id','user_type', 'bike_share_for_all_trip']]
+    df.drop_duplicates(['duration_sec', 'start_time', 'end_time', 'start_station_id','end_station_id', 'bike_id','user_type', 'bike_share_for_all_trip'], keep='first', inplace=True)
+    df.to_csv('trips.csv')
+
+    if os.path.isfile('All.csv'):
+        os.remove('All.csv')
+
+########################## END: DATA CLEANING ##############################
 
 
 
