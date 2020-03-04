@@ -76,6 +76,7 @@ def mergeAllFiles():
 # 2. There are some locations with latitude and longitude equal to zero.
 # 3. Station name and station id columns have many NaN values (less tha 4% of the data).
 # 4. 95% values for rental_access_method is NaN
+# 5. Start and end date of the trip is string.
 
 # Tidyness issues:
 # 1. Data of stations and trips are stored in the same table.
@@ -117,7 +118,15 @@ def clean():
     # test
     #df.info()
 
-    # 5. Devide the stations and trips data
+    # 5. Conver dates from string to datetime
+    # Code
+    df['start_time'] = pd.to_datetime(df['start_time'])
+    df['end_time'] = pd.to_datetime(df['end_time'])
+
+    # test
+    #df.info()
+
+    # 6. Devide the stations and trips data
 
     # Code: Seperate station data
     start_stations = df.groupby(['start_station_id','start_station_latitude','start_station_longitude','start_station_name' ]).size().reset_index()
