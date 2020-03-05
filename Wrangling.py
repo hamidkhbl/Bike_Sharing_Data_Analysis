@@ -63,8 +63,8 @@ def mergeAllFiles():
     for f in fileNames:
             os.remove(f)
             os.remove(f[:len(f)-4])
-    shutil.rmtree('__MACOSX')
-    shutil.rmtree('__pycache__')
+    if os.path.exists('__MACOSX'):
+        shutil.rmtree('__MACOSX')
 
 ########################## END: Data Gathering ###############################
 
