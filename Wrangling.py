@@ -4,6 +4,7 @@ import requests
 import os
 import zipfile
 import shutil
+import math
 
 ########################## START: Data Gathering ###############################
 
@@ -151,6 +152,22 @@ def clean():
         os.remove('All.csv')
 
 ########################## END: DATA CLEANING ##############################
+
+########################## Haversine Function f
+# This function is taken from here: https://janakiev.com/blog/gps-points-distance-python/
+def haversine(coord1, coord2):
+    R = 6372800  # Earth radius in meters
+    lat1, lon1 = coord1
+    lat2, lon2 = coord2
+
+    phi1, phi2 = math.radians(lat1), math.radians(lat2) 
+    dphi       = math.radians(lat2 - lat1)
+    dlambda    = math.radians(lon2 - lon1)
+    
+    a = math.sin(dphi/2)**2 + \
+        math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
+    
+    return 2*R*math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
 
