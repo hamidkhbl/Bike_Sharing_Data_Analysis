@@ -58,7 +58,7 @@ def mergeAllFiles():
 
     if os.path.isfile('All.csv'):
         os.remove('All.csv')
-    df_all.to_csv('All.csv')
+    df_all.to_csv('All.csv',index=False)
 
     #Remove downloaded files
     for f in fileNames:
@@ -88,7 +88,7 @@ def mergeAllFiles():
 
 def clean():
     # Read the data
-    df = pd.read_csv('All.csv', index_col=0, low_memory=False)
+    df = pd.read_csv('All.csv', low_memory=False)
 
     # 1. Define: Remove all the trips without a station Id
     # code
@@ -141,19 +141,19 @@ def clean():
     stations = start_stations.append(end_stations)
     stations.drop_duplicates(['station_id','latitude','longitude'], keep='first', inplace=True)
 
-    stations.to_csv('stations.csv')
+    stations.to_csv('stations.csv',index=False)
 
     # Remove station details from trip data
     df = df[['duration_sec', 'start_time', 'end_time', 'start_station_id','end_station_id', 'bike_id','user_type', 'bike_share_for_all_trip']]
     df.drop_duplicates(['duration_sec', 'start_time', 'end_time', 'start_station_id','end_station_id', 'bike_id','user_type', 'bike_share_for_all_trip'], keep='first', inplace=True)
-    df.to_csv('trips.csv')
+    df.to_csv('trips.csv',index=False)
 
     if os.path.isfile('All.csv'):
         os.remove('All.csv')
 
 ########################## END: DATA CLEANING ##############################
 
-########################## Haversine Function f
+########################## Haversine Function ##############################
 # This function is taken from here: https://janakiev.com/blog/gps-points-distance-python/
 def haversine(coord1, coord2):
     R = 6372800  # Earth radius in meters
@@ -166,7 +166,6 @@ def haversine(coord1, coord2):
     
     a = math.sin(dphi/2)**2 + \
         math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
-    
     return 2*R*math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
